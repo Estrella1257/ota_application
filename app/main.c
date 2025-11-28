@@ -1,54 +1,52 @@
-#define LOG_TAG    "main"
-#include <elog.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 #include "console.h"
-#include "main.h"
+#include "shell.h"
+
+static volatile uint8_t rx_data;
+static Shell shell;
+static char shell_buffer[512];
 
 extern void board_lowlevel_init(void);
-static void test_elog(void);
 
-int main(void){
-    
-   	board_lowlevel_init();
+static void uart_rx_handler(uint8_t data)
+{
+	rx_data=data;
+}
+
+static signed short _shell_read(char *data,unsigned short len)
+{
+	if(rx_data != 0)
+	{
+		*data = rx_data;
+		rx_data = 0;
+		return 1;
+	}
+	return 0;
+}
+
+static signed short _shell_write(char *data,unsigned short len)
+{
+	for(unsigned short i = 0; i < len; i++)
+	{
+		uart_send((uint8_t)data[i]);
+	}
+	return len;
+}
+
+int main(void)
+{
+	board_lowlevel_init();
 	uart_init();
+	uart_recv_callback_register(uart_rx_handler);
 
-    setvbuf(stdout, NULL, _IONBF, 0); // 禁用 stdout 缓冲
+	shell.read = _shell_read;
+	shell.write = _shell_write;
+	shellInit(&shell,shell_buffer,sizeof(shell_buffer));
 
-    /* initialize EasyLogger */
-    elog_init();
-	elog_set_text_color_enabled(true);
-
-    /* set EasyLogger log format */
-    elog_set_fmt(ELOG_LVL_ASSERT, ELOG_FMT_ALL);
-    elog_set_fmt(ELOG_LVL_ERROR, ELOG_FMT_LVL | ELOG_FMT_TAG );
-    elog_set_fmt(ELOG_LVL_WARN, ELOG_FMT_LVL | ELOG_FMT_TAG );
-    elog_set_fmt(ELOG_LVL_INFO, ELOG_FMT_LVL | ELOG_FMT_TAG );
-    elog_set_fmt(ELOG_LVL_DEBUG, ELOG_FMT_ALL & ~(ELOG_FMT_FUNC | ELOG_FMT_T_INFO | ELOG_FMT_P_INFO));
-    elog_set_fmt(ELOG_LVL_VERBOSE, ELOG_FMT_ALL);
-    /* start EasyLogger */
-    elog_start();
-
-    printf("EasyLogger started.\n");
-    test_elog();
-    while(1) {
-		
-    }
-    
-    return 0;
+	while(1)
+	{
+		shellTask(&shell);
+	}
 }
-
-/**
- * EasyLogger demo
- */
-void test_elog(void) {
-    /* test log output for all level */
-    log_a("Hello EasyLogger!");
-    log_e("Hello EasyLogger!");
-    log_w("Hello EasyLogger!");
-    log_i("Hello EasyLogger!");
-    log_d("Hello EasyLogger!");
-    log_v("Hello EasyLogger!");
-    elog_raw("Hello EasyLogger!");
-}
-                                              
