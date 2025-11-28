@@ -10,6 +10,8 @@ int cmd_helloworld(int argc,char *argv[])
     shellWriteString(shellGetCurrent(),"hello world\n");
     shellPrint(shellGetCurrent(),"we have %d parameters\n",argc);
 
+    for(uint32_t i = 0;i < 0xffffff;i++);
+
     for(int i = 0;i < argc;i++)
     {
         shellPrint(shellGetCurrent(),"argv[%d]:%s\n",i,argv[i]);
