@@ -1,53 +1,43 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
+#include "main.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "main.h"
 #include "console.h"
-#include "shell.h"
-#include "ringbuffer8.h"
-
-static uint8_t rx_buff[128];
-static ringbuffer8_t rxrb;
-static Shell shell;
-static char shell_buffer[512];
 
 extern void board_lowlevel_init(void);
+extern void app_shell_init(void);
+//extern void app_logger_init(void);
 
-static void uart_rx_handler(uint8_t data)
+
+static void component_init(void)
 {
-	if (!rb8_full(rxrb))
-	{
-		rb8_put(rxrb, data);
-	}
-	
+    console_init();
+    app_shell_init();
+    //app_logger_init();
 }
 
-static signed short _shell_write(char *data,unsigned short len)
+static void application_init(void)
 {
-	for(unsigned short i = 0; i < len; i++)
-	{
-		uart_send((uint8_t)data[i]);
-	}
-	return len;
+
 }
 
-int main(void)
+static void sys_init(void *args)
 {
-	board_lowlevel_init();
-	uart_init();
-	uart_recv_callback_register(uart_rx_handler);
+    component_init();
+    application_init();
 
-	rxrb = rb8_new(rx_buff,sizeof(rx_buff));
+    vTaskDelete(NULL);
+}
 
-	shell.write = _shell_write;
-	shellInit(&shell,shell_buffer,sizeof(shell_buffer));
+void main(void)
+{
+    board_lowlevel_init();
 
-	uint8_t rxdata;
-	while(1)
-	{
-		if (!rb8_empty(rxrb))
-		{
-			rb8_get(rxrb,&rxdata);
-			shellHandler(&shell,rxdata);
-		}
-	}
+    xTaskCreate(sys_init, "sysinit", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
+
+    vTaskStartScheduler();
 }

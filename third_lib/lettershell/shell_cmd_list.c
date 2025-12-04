@@ -33,7 +33,7 @@ extern int shellExecute(int argc, char *argv[]);
 #endif
 extern int cmd_helloworld(int argc,char *argv[]);
 extern int cmd_add(int argc,char *argv[]);
-// extern int cmd_mem(int argc,char *argv[]);
+extern int cmd_mem(int argc,char *argv[]);
 
 SHELL_AGENCY_FUNC(shellRun, shellGetCurrent(), (const char *)p1);
 
@@ -97,8 +97,8 @@ const ShellCommand shellCommandList[] =
                     helloworld,cmd_helloworld,this is a helloworld command),
     SHELL_CMD_ITEM(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_MAIN)|SHELL_CMD_DISABLE_RETURN,
                     add,cmd_add,add a and b),
-    // SHELL_CMD_ITEM(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_MAIN)|SHELL_CMD_DISABLE_RETURN,
-    //                 mem,cmd_mem,alloc memory),
+    SHELL_CMD_ITEM(SHELL_CMD_PERMISSION(0)|SHELL_CMD_TYPE(SHELL_TYPE_CMD_MAIN)|SHELL_CMD_DISABLE_RETURN,
+                    mem,cmd_mem,alloc memory),
 };
 
 
