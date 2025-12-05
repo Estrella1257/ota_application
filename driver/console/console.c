@@ -142,7 +142,7 @@ void USART1_IRQHandler(void)
 
 void DMA2_Stream7_IRQHandler(void)
 {
-	if (DMA_GetITStatus(DMA2_Stream7, DMA_FLAG_TCIF7) != RESET)
+	if (DMA_GetFlagStatus(DMA2_Stream7, DMA_FLAG_TCIF7) != RESET)              //注意函数名Flag跟IT的区别
 	{
 		DMA_ClearFlag(DMA2_Stream7, DMA_FLAG_TCIF7);
 		DMA_Cmd(DMA2_Stream7,DISABLE);

@@ -28,8 +28,14 @@
  
 #include <elog.h>
 #include <stdio.h>
+#include <stddef.h>
 #include "stm32f4xx.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 #include "console.h"
+
+static SemaphoreHandle_t elog_mux_handle;
+
 /**
  * EasyLogger port initialize
  *
@@ -39,7 +45,8 @@ ElogErrCode elog_port_init(void) {
     ElogErrCode result = ELOG_NO_ERR;
 
     /* add your code here */
-    
+    elog_mux_handle = xSemaphoreCreateMutex();
+    configASSERT(elog_mux_handle);
     return result;
 }
 
@@ -50,7 +57,10 @@ ElogErrCode elog_port_init(void) {
 void elog_port_deinit(void) {
 
     /* add your code here */
-
+    if (elog_mux_handle != NULL)
+    {
+        vSemaphoreDelete(elog_mux_handle);
+    }
 }
 
 /**
@@ -62,9 +72,7 @@ void elog_port_deinit(void) {
 void elog_port_output(const char *log, size_t size) {
     
     /* add your code here */
-    for (size_t i = 0; i < size; i++) {
-        uart_send((uint8_t)log[i]);
-    }
+    console_write((uint8_t *)log, size);
 }
 
 /**
@@ -73,7 +81,10 @@ void elog_port_output(const char *log, size_t size) {
 void elog_port_output_lock(void) {
     
     /* add your code here */
-    __set_PRIMASK(1);
+    if (is_user())
+    {
+        xSemaphoreTake(elog_mux_handle, portMAX_DELAY);
+    }
 }
 
 /**
@@ -82,8 +93,12 @@ void elog_port_output_lock(void) {
 void elog_port_output_unlock(void) {
     
     /* add your code here */
-    __set_PRIMASK(0); 
+    if (is_user())
+    {
+        xSemaphoreGive(elog_mux_handle);
+    }
 }
+
 
 /**
  * get current time interface
@@ -93,7 +108,9 @@ void elog_port_output_unlock(void) {
 const char *elog_port_get_time(void) {
     
     /* add your code here */
-    return "";
+    static char time_str[64] = "00:00";
+    snprintf(time_str, sizeof(time_str), "%04lu", os_now());
+    return time_str;
 }
 
 /**
@@ -104,7 +121,7 @@ const char *elog_port_get_time(void) {
 const char *elog_port_get_p_info(void) {
     
     /* add your code here */
-    return "";
+    return pcTaskGetName(NULL);
 }
 
 /**

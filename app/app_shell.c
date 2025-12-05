@@ -29,6 +29,10 @@ static signed short _shell_write(char *data,unsigned short len)
 static void app_shell_task(void *param)
 {
     uint8_t rxdata;
+
+    shell.write = _shell_write;
+	shellInit(&shell,shell_buffer,sizeof(shell_buffer));
+    
     while(1)
     {
         if (xQueueReceive(shell_rx_queue, &rxdata, portMAX_DELAY))
@@ -43,10 +47,9 @@ void app_shell_init(void)
     shell_rx_queue = xQueueCreate(128, sizeof(uint8_t));
     configASSERT(shell_rx_queue);           // 断言：确保队列创建成功
 
-    shell.write = _shell_write;
-	shellInit(&shell,shell_buffer,sizeof(shell_buffer));
+
 
     console_recv_callback_register(shell_rx_handler);
 
-    xTaskCreate(app_shell_task, "shell", 256, NULL, 1, NULL);
+    xTaskCreate(app_shell_task, "shell", 512, NULL, 1, NULL);
 }

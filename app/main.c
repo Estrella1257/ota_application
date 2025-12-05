@@ -17,7 +17,7 @@ static void component_init(void)
 {
     console_init();
     app_shell_init();
-    //app_logger_init();
+    app_logger_init();
 }
 
 static void application_init(void)
